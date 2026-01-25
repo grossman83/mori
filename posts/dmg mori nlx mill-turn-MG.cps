@@ -428,7 +428,7 @@ var yAxisMaximum = toPreciseUnit(50.8, MM); // specifies the maximum range for t
 var gotMultiTurret = false; // specifies if the machine has several turrets
 var gotPolarInterpolation = true; // specifies if the machine has XY polar interpolation capabilities
 var gotSecondarySpindle = true;
-var gotDoorControl = true;
+var gotDoorControl = false;
 var airCleanChuck = true; // use air to clean off chuck at part transfer and part eject
 var turret1GotYAxis = true;
 var turret1GotBAxis = false;
@@ -3390,8 +3390,17 @@ function onCommand(command) {
   case COMMAND_SPINDLE_COUNTERCLOCKWISE:
     writeBlock(mFormat.format(getCode("START_SPINDLE_CCW", getSpindle(TOOL))));
     break;
-  // case COMMAND_CLAMP: // add support for clamping
-  // case COMMAND_UNCLAMP: // add support for clamping
+  // case COMMAND_CLAMP: // add support for clamping (added by MG)
+  case COMMAND_UNCLAMP_SPINDLE:
+    writeBlock(mFormat.format(69)); // Spindle Unclamp
+    writeBlock(gFormat.format(4), "P" + 1000); // Dwell for 1000ms (1 second)
+    break;
+  // case COMMAND_UNCLAMP: // add support for clamping (added by MG)
+  case COMMAND_CLAMP_SPINDLE:
+    writeBlock(mFormat.format(68)); // Spindle Unclamp
+    writeBlock(gFormat.format(4), "P" + 1000); // Dwell for 1000ms (1 second)
+    break;
+  
   default:
     onUnsupportedCommand(command);
   }
