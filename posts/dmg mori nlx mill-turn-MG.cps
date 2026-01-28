@@ -1542,7 +1542,7 @@ function onSection() {
   // Position all axes at home
   if (insertToolCall && !machineState.stockTransferIsActive) {
     if (gotSecondarySpindle) {
-      writeBlock(gFormat.format(330)); // retract Sub Spindle if applicable
+      // writeBlock(gFormat.format(330)); // retract Sub Spindle if applicable
     }
     goHome();
 
@@ -2519,7 +2519,7 @@ function onCycle() {
     // Start of stock transfer operation(s)
     if (!machineState.stockTransferIsActive) {
       if (cycleType != "secondary-spindle-return" && cycleType != "secondary-spindle-pull") {
-        writeBlock(gFormat.format(330)); // retract Sub Spindle
+        // writeBlock(gFormat.format(330)); // retract Sub Spindle
         goHome();
       }
       onCommand(COMMAND_STOP_SPINDLE);
@@ -2659,7 +2659,7 @@ function onCycle() {
           writeBlock(mFormat.format(getCode("UNCLAMP_CHUCK", getSecondarySpindle())), formatComment("UNCLAMP SUB CHUCK"));
           onDwell(cycle.dwell);
         }
-        writeBlock(gFormat.format(330), formatComment("SUB SPINDLE RETURN"));
+        // writeBlock(gFormat.format(330), formatComment("SUB SPINDLE RETURN"));
       } else {
         writeBlock(mFormat.format(getCode("CLAMP_CHUCK", getSpindle(PART))), formatComment("CLAMP MAIN CHUCK"));
         onDwell(cycle.dwell);
@@ -3454,7 +3454,7 @@ function ejectPart() {
     writeComment(localize("PART EJECT"));
   }
   gMotionModal.reset();
-  writeBlock(gFormat.format(330)); // retract bar feeder
+  // writeBlock(gFormat.format(330)); // retract bar feeder
   goHome(); // Position all axes to home position
   writeBlock(mFormat.format(getCode("UNLOCK_MULTI_AXIS", getSpindle(PART))));
   if (!getProperty("optimizeCAxisSelect")) {
@@ -3568,7 +3568,7 @@ function onClose() {
 
   gMotionModal.reset();
   if (gotSecondarySpindle) {
-    writeBlock(gFormat.format(330)); // retract Sub Spindle if applicable
+    // writeBlock(gFormat.format(330)); // retract Sub Spindle if applicable
   }
 
   // Move to home position
