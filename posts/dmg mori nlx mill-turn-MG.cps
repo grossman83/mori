@@ -423,8 +423,8 @@ var tailStockModal = createOutputVariable({}, mFormat);
 var firstFeedParameter = 100;
 var bRetractStroke = 0;
 var bTransferTolerance = (unit == MM) ? 0.25 : 0.01;
-var yAxisMinimum = toPreciseUnit(-50.8, MM); // specifies the minimum range for the Y-axis
-var yAxisMaximum = toPreciseUnit(50.8, MM); // specifies the maximum range for the Y-axis
+var yAxisMinimum = toPreciseUnit(-25.4, MM); // specifies the minimum range for the Y-axis
+var yAxisMaximum = toPreciseUnit(25.4, MM); // specifies the maximum range for the Y-axis
 var gotMultiTurret = false; // specifies if the machine has several turrets
 var gotPolarInterpolation = true; // specifies if the machine has XY polar interpolation capabilities
 var gotSecondarySpindle = true;
