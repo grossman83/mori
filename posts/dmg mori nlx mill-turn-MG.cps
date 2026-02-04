@@ -1983,15 +1983,11 @@ function updateMachiningMode(section) {
           machineState.usePolarCoordinates = true;
           bestABC = undefined;
         } else {
-          //bestABC = section.getABCByPreference(machineConfiguration, section.workPlane, getCurrentDirection(), C, PREFER_CLOSEST, ENABLE_RESET | ENABLE_LIMITS);
-          bestABC = getBestABC(section);
-          bestABC = section.doesToolpathFitWithinLimits(machineConfiguration, bestABC) ? bestABC : undefined;
-          if (bestABC == undefined) { // toolpath does not match XY ranges, enable interpolation mode
-            if (gotPolarInterpolation) {
-              machineState.usePolarInterpolation = true;
-            } else {
-              machineState.usePolarCoordinates = true;
-            }
+          // Force polar mode for all axial milling to avoid Y-axis limit issues
+          if (gotPolarInterpolation) {
+            machineState.usePolarInterpolation = true;
+          } else {
+            machineState.usePolarCoordinates = true;
           }
         }
       }
