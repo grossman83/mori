@@ -1983,11 +1983,16 @@ function updateMachiningMode(section) {
           machineState.usePolarCoordinates = true;
           bestABC = undefined;
         } else {
-          // Force polar mode for all axial milling to avoid Y-axis limit issues
-          if (gotPolarInterpolation) {
-            machineState.usePolarInterpolation = true;
-          } else {
-            machineState.usePolarCoordinates = true;
+          bestABC = getBestABC(section);
+          var range = section.getOptimizedBoundingBox(machineConfiguration, bestABC);
+          var yAxisWithinLimits = machineConfiguration.getAxisY().getRange().isWithin(yFormat.getResultingValue(range.lower.y)) &&
+            machineConfiguration.getAxisY().getRange().isWithin(yFormat.getResultingValue(range.upper.y));
+          if (!yAxisWithinLimits) {
+            if (gotPolarInterpolation) {
+              machineState.usePolarInterpolation = true;
+            } else {
+              machineState.usePolarCoordinates = true;
+            }
           }
         }
       }
