@@ -1506,6 +1506,7 @@ function onSection() {
         if ((tempSpindle != SPINDLE_LIVE) && !getProperty("optimizeCAxisSelect")) {
           cAxisEngageModal.reset();
           writeBlock(cAxisEngageModal.format(getCode("DISABLE_C_AXIS", getSpindle(PART))));
+          onDwell(0.3);
         }
       }
       onCommand(COMMAND_COOLANT_OFF);
@@ -1596,6 +1597,7 @@ function onSection() {
       // writeBlock(wcsOut, mFormat.format(getCode("SET_SPINDLE_FRAME", getSpindle(PART))));
       writeBlock(wcsOut);
       writeBlock(cAxisEngageModal.format(getCode("ENABLE_C_AXIS", getSpindle(PART))));
+      onDwell(0.3);
       unwindCAxis();
       if (!machineState.usePolarInterpolation && !machineState.usePolarCoordinates && !currentSection.isMultiAxis()) {
         onCommand(COMMAND_LOCK_MULTI_AXIS);
@@ -1616,6 +1618,7 @@ function onSection() {
       }
       writeBlock(wcsOut);
       writeBlock(cAxisEngageModal.format(getCode("DISABLE_C_AXIS", getSpindle(PART))));
+      onDwell(0.3);
     }
   }
 
@@ -2543,7 +2546,9 @@ function onCycle() {
         cAxisEngageModal.reset();
       }
       writeBlock(feedMode, gPlaneModal.format(18), cAxisEngageModal.format(getCode("DISABLE_C_AXIS", getSpindle(PART))));
+      onDwell(0.3);
       writeBlock(mFormat.format(getCode("DISABLE_C_AXIS", getSecondarySpindle())));
+      onDwell(0.3);
     }
 
     switch (cycleType) {
@@ -3328,9 +3333,11 @@ function onCommand(command) {
     break;
   case COMMAND_LOCK_MULTI_AXIS:
     writeBlock(cAxisBrakeModal.format(getCode("LOCK_MULTI_AXIS", getSpindle(PART))));
+    onDwell(0.3);
     break;
   case COMMAND_UNLOCK_MULTI_AXIS:
     writeBlock(cAxisBrakeModal.format(getCode("UNLOCK_MULTI_AXIS", getSpindle(PART))));
+    onDwell(0.3);
     break;
   case COMMAND_START_CHIP_TRANSPORT:
     writeBlock(mFormat.format(200), formatComment("CHIP CONVEYOR START"));
@@ -3394,12 +3401,12 @@ function onCommand(command) {
   // case COMMAND_CLAMP: // add support for clamping (added by MG)
   case COMMAND_UNCLAMP_SPINDLE:
     writeBlock(mFormat.format(69)); // Spindle Unclamp
-    writeBlock(gFormat.format(4), "P" + 1000); // Dwell for 1000ms (1 second)
+    onDwell(0.3);
     break;
   // case COMMAND_UNCLAMP: // add support for clamping (added by MG)
   case COMMAND_CLAMP_SPINDLE:
-    writeBlock(mFormat.format(68)); // Spindle Unclamp
-    writeBlock(gFormat.format(4), "P" + 1000); // Dwell for 1000ms (1 second)
+    writeBlock(mFormat.format(68)); // Spindle Clamp
+    onDwell(0.3);
     break;
   
   default:
@@ -3458,6 +3465,7 @@ function ejectPart() {
   // writeBlock(gFormat.format(330)); // retract bar feeder
   goHome(); // Position all axes to home position
   writeBlock(mFormat.format(getCode("UNLOCK_MULTI_AXIS", getSpindle(PART))));
+  onDwell(0.3);
   if (!getProperty("optimizeCAxisSelect")) {
     cAxisEngageModal.reset();
   }
@@ -3467,6 +3475,7 @@ function ejectPart() {
     gPlaneModal.format(getG17Code()),
     cAxisEngageModal.format(getCode("DISABLE_C_AXIS", getSpindle(PART)))
   );
+  onDwell(0.3);
   // setCoolant(COOLANT_THROUGH_TOOL);
   gSpindleModeModal.reset();
   writeBlock(
@@ -3578,11 +3587,15 @@ function onClose() {
   if (!getProperty("optimizeCAxisSelect")) {
     cAxisEngageModal.reset();
   }
+  // Unclamp C-axis before homing
+  onCommand(COMMAND_UNLOCK_MULTI_AXIS);
   if (liveTool) {
     writeBlock(cAxisEngageModal.format(getCode("ENABLE_C_AXIS", getSpindle(PART))));
+    onDwell(0.3);
     unwindCAxis();
   }
   writeBlock(cAxisEngageModal.format(getCode("DISABLE_C_AXIS", getSpindle(PART))));
+  onDwell(0.3);
 
   // Automatically eject part
   if (ejectRoutine) {
