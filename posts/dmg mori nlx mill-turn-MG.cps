@@ -1035,9 +1035,15 @@ function formatFeedMode(mode) {
   return gFeedModeModal.format(fMode);
 }
 
+var maximumFeedrate = (unit == IN) ? 100 : 2540; // max feedrate limit (100 in/min or 2540 mm/min)
+
 function getFeed(f) {
   if (currentSection.feedMode != FEED_PER_REVOLUTION && machineState.feedPerRevolution) {
     f /= spindleSpeed;
+  }
+  // Clamp feedrate to maximum
+  if (currentSection.feedMode != FEED_PER_REVOLUTION) {
+    f = Math.min(f, maximumFeedrate);
   }
   if (activeMovements) {
     var feedContext = activeMovements[movement];
