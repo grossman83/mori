@@ -23,11 +23,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-description = "DMG Mori NLX Mill/Turn";
-vendor = "DMG MORI";
-vendorUrl = "http://www.dmgmori.com";
+description = "ZT1500YB Custom Mill-Turn";
+vendor = "Marc Grossman";
+vendorUrl = "na";
 legal = "Copyright (C) 2012-2025 by Autodesk, Inc.";
-certificationLevel = 2;
+certificationLevel = 0;
 minimumRevision = 45909;
 
 longDescription = "DMG Mori NLX post with support for mill-turn and a CELOS control with MAPPS.";
