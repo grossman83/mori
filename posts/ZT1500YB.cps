@@ -903,6 +903,45 @@ function onOpen() {
     }
   }
 
+  // tool list with turret assignments
+  var toolsUsed = [];
+  var toolsSeen = {};
+  var gotTurret1 = false;
+  var gotTurret2 = false;
+  for (var i = 0; i < getNumberOfSections(); ++i) {
+    var section = getSection(i);
+    var tool = section.getTool();
+    var compensationOffset = tool.isTurningTool() ? tool.compensationOffset : tool.lengthOffset;
+    var toolId = toolFormat.format(tool.number * 100 + compensationOffset % 100);
+    if (!toolsSeen[toolId]) {
+      var turret = tool.turret;
+      if (turret == 0 || turret == undefined) {
+        turret = 1;
+      }
+      if (turret != 1 && turret != 2) {
+        error(subst("Tool T%1 has invalid turret number %2. Only turret 1 and turret 2 are supported.", toolId, turret));
+        return;
+      }
+      if (turret == 1) {
+        gotTurret1 = true;
+      } else {
+        gotTurret2 = true;
+      }
+      toolsSeen[toolId] = true;
+      toolsUsed.push({id: toolId, turret: turret});
+    }
+  }
+  if (gotTurret1 && gotTurret2) {
+    error("Program contains tools from both turret 1 and turret 2. Each program must use only one turret.");
+    return;
+  }
+  if (toolsUsed.length > 0) {
+    writeComment("TOOLS USED");
+    for (var i = 0; i < toolsUsed.length; ++i) {
+      writeComment("T" + toolsUsed[i].id + " - TURRET " + toolsUsed[i].turret);
+    }
+  }
+
   if (false) {
     // check for duplicate tool number
     for (var i = 0; i < getNumberOfSections(); ++i) {
