@@ -425,12 +425,13 @@ var bRetractStroke = 0;
 var bTransferTolerance = (unit == MM) ? 0.25 : 0.01;
 var yAxisMinimum = toPreciseUnit(-25.4, MM); // specifies the minimum range for the Y-axis
 var yAxisMaximum = toPreciseUnit(25.4, MM); // specifies the maximum range for the Y-axis
-var gotMultiTurret = false; // specifies if the machine has several turrets
+var gotMultiTurret = true; // specifies if the machine has several turrets
 var gotPolarInterpolation = true; // specifies if the machine has XY polar interpolation capabilities
 var gotSecondarySpindle = true;
 var gotDoorControl = false;
 var airCleanChuck = true; // use air to clean off chuck at part transfer and part eject
 var turret1GotYAxis = true;
+var turret2GotYAxis = false;
 var turret1GotBAxis = false;
 var bAxisIsManual = false;
 
@@ -1585,7 +1586,7 @@ function onSection() {
       plane = getG17Code();
       break;
     case MACHINING_DIRECTION_RADIAL:
-      plane = 19;
+      plane = gotYAxis ? 19 : 18;
       break;
     case MACHINING_DIRECTION_INDEXING:
       plane = getG17Code();
@@ -2005,7 +2006,7 @@ function updateMachiningMode(section) {
           }
         }
       }
-    } else if (machineState.machiningDirection == MACHINING_DIRECTION_RADIAL) { // G19 plane
+    } else if (machineState.machiningDirection == MACHINING_DIRECTION_RADIAL) { // G19 or G18 plane (depending on Y-axis availability)
       var range = section.getOptimizedBoundingBox(machineConfiguration, machineConfiguration.getABC(section.workPlane));
       var yAxisWithinLimits = machineConfiguration.getAxisY().getRange().isWithin(yFormat.getResultingValue(range.lower.y)) &&
         machineConfiguration.getAxisY().getRange().isWithin(yFormat.getResultingValue(range.upper.y));
@@ -2123,7 +2124,7 @@ function getCompensationPlane(abc, returnCode, outputPlane) {
       if (isSameDirection(currentSection.workPlane.forward, new Vector(0, 0, 1))) {
         plane = PLANE_XY;
       } else if (Vector.dot(currentSection.workPlane.forward, new Vector(0, 0, 1)) < 1e-7) {
-        plane = PLANE_YZ;
+        plane = gotYAxis ? PLANE_YZ : PLANE_ZX;
       } else {
         if (returnCode) {
           if (machineState.machiningDirection == MACHINING_DIRECTION_AXIAL) {
@@ -2806,7 +2807,11 @@ function writeCycleClearance(plane, clearance) {
       writeBlock(gMotionModal.format(0), zOutput.format(clearance));
       break;
     case 18:
-      writeBlock(gMotionModal.format(0), yOutput.format(clearance));
+      if (gotYAxis) {
+        writeBlock(gMotionModal.format(0), yOutput.format(clearance));
+      } else {
+        writeBlock(gMotionModal.format(0), xOutput.format(clearance));
+      }
       break;
     case 19:
       writeBlock(gMotionModal.format(0), xOutput.format(clearance));
@@ -2853,7 +2858,7 @@ function onCyclePoint(x, y, z) {
     plane = 17; // XY plane
     localZOutput = zOutput;
   } else if (Vector.dot(currentSection.workPlane.forward, new Vector(0, 0, 1)) < 1e-7) {
-    plane = 19; // YZ plane
+    plane = gotYAxis ? 19 : 18; // YZ or ZX plane depending on Y-axis availability
     localZOutput = xOutput;
   } else {
     expandCyclePoint(x, y, z);
@@ -2948,7 +2953,7 @@ function onCyclePoint(x, y, z) {
   var rapto = 0;
   if (isFirstCyclePoint()) { // first cycle point
     if (getProperty("cycleFormat") == "f15") {
-      rapto = cycle.retract * ((plane == 19) ? 2 : 1); // diameter mode
+      rapto = cycle.retract * ((plane == 19 || plane == 18) ? 2 : 1); // diameter mode
     } else {
       rapto = (getSpindle(PART) == SPINDLE_SUB && machineState.machiningDirection == MACHINING_DIRECTION_AXIAL) ? cycle.clearance - cycle.retract : cycle.retract - cycle.clearance; // radius mode
     }
@@ -2960,7 +2965,7 @@ function onCyclePoint(x, y, z) {
       writeCycleClearance(plane, cycle.clearance);
       localZOutput.reset();
       writeBlock(
-        gCycleModal.format(getProperty("cycleFormat") == "f15" ? (P > 0 ? 82 : 81) : (plane == 19 ? 87 : 83)),
+        gCycleModal.format(getProperty("cycleFormat") == "f15" ? (P > 0 ? 82 : 81) : ((plane == 19 || plane == 18) ? 87 : 83)),
         getCommonCycle(x, y, z, rapto, true),
         conditional(P > 0, pOutput.format(P)),
         getFeed(cycle.feedrate),
@@ -2974,7 +2979,7 @@ function onCyclePoint(x, y, z) {
         writeCycleClearance(plane, cycle.clearance);
         localZOutput.reset();
         writeBlock(
-          gCycleModal.format(getProperty("cycleFormat") == "f15" ? 83.1 : (plane == 19 ? 87 : 83)),
+          gCycleModal.format(getProperty("cycleFormat") == "f15" ? 83.1 : ((plane == 19 || plane == 18) ? 87 : 83)),
           getCommonCycle(x, y, z, rapto, true),
           conditional(cycle.incrementalDepth > 0, peckOutput.format(cycle.incrementalDepth)),
           conditional(P > 0, pOutput.format(P)),
@@ -2987,7 +2992,7 @@ function onCyclePoint(x, y, z) {
       writeCycleClearance(plane, cycle.clearance);
       localZOutput.reset();
       writeBlock(
-        gCycleModal.format(getProperty("cycleFormat") == "f15" ? 83 : (plane == 19 ? 87 : 83)),
+        gCycleModal.format(getProperty("cycleFormat") == "f15" ? 83 : ((plane == 19 || plane == 18) ? 87 : 83)),
         getCommonCycle(x, y, z, rapto, true),
         conditional(cycle.incrementalDepth > 0, peckOutput.format(cycle.incrementalDepth)),
         conditional(P > 0, pOutput.format(P)),
@@ -3006,7 +3011,7 @@ function onCyclePoint(x, y, z) {
         gCode = 84.2;
       } else {
         var reverseTap = tool.type == TOOL_TAP_LEFT_HAND;
-        gCode = plane == 19 ? 88 : 84;
+        gCode = (plane == 19 || plane == 18) ? 88 : 84;
         gCode += reverseTap ? 0.1 : 0;
       }
       writeBlock(
@@ -3024,7 +3029,7 @@ function onCyclePoint(x, y, z) {
       writeCycleClearance(plane, cycle.clearance);
       localZOutput.reset();
       writeBlock(
-        gCycleModal.format(getProperty("cycleFormat") == "f15" ? 89 : (plane == 19 ? 89 : 85)),
+        gCycleModal.format(getProperty("cycleFormat") == "f15" ? 89 : ((plane == 19 || plane == 18) ? 89 : 85)),
         getCommonCycle(x, y, z, rapto, true),
         conditional(P > 0, pOutput.format(P)),
         getFeed(cycle.feedrate),

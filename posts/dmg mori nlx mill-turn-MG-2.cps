@@ -232,7 +232,7 @@ properties = {
     description: "Use M80 after cutoff for parting confirmation.",
     group      : "preferences",
     type       : "boolean",
-    value      : true,
+    value      : false,
     scope      : "post"
   },
   useSimpleThread: {
